@@ -443,7 +443,11 @@
                             { icon: "🔧", name: "配件" },
                             { icon: "📦", name: "替代品" },
                             { icon: "🛡️", name: "保護套" }
-                        ]
+                        ],
+                        purchaseLinks: result.data.purchaseLinks || {
+                            online: [],
+                            offline: []
+                        }
                     };
 
                     // 取得平台 URL
