@@ -1,992 +1,36 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>萬物價格掃描器</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: #000;
-            color: #fff;
-            overflow-x: hidden;
-            position: relative;
-            min-height: 100vh;
-        }
-
-        .app-container {
-            max-width: 500px;
-            margin: 0 auto;
-            min-height: 100vh;
-            position: relative;
-            background: #0a0a0a;
-        }
-
-        /* 頂部導航欄 */
-        .nav-header {
-            position: fixed;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100%;
-            max-width: 500px;
-            padding: 15px 20px;
-            background: rgba(0, 0, 0, 0.9);
-            backdrop-filter: blur(10px);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .app-title {
-            font-size: 20px;
-            font-weight: 600;
-            color: #fff;
-            text-align: center;
-            flex: 1;
-        }
-
-        .nav-icon {
-            width: 24px;
-            height: 24px;
-            cursor: pointer;
-            transition: opacity 0.3s;
-        }
-
-        .nav-icon:hover {
-            opacity: 0.7;
-        }
-
-        /* 相機視圖 */
-        .camera-view {
-            position: relative;
-            height: 100vh;
-            overflow: hidden;
-            background: #000;
-        }
-
-        #cameraFeed {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transform-origin: center;
-            transition: transform 0.3s ease;
-        }
-
-        .camera-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            pointer-events: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* 掃描提示文字 */
-        .capture-hint {
-            position: absolute;
-            top: 12%;
-            width: 100%;
-            text-align: center;
-            font-size: 17px;
-            color: white;
-            z-index: 10;
-            pointer-events: none;
-        }
-
-        /* 準確度開關 */
-        .accuracy-toggle {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 15px;
-            color: white;
-            font-size: 16px;
-        }
-
-        .accuracy-toggle input[type="checkbox"] {
-            width: 50px;
-            height: 26px;
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 13px;
-            position: relative;
-            cursor: pointer;
-            appearance: none;
-            outline: none;
-            transition: all 0.3s ease;
-        }
-
-        .accuracy-toggle input[type="checkbox"]:checked {
-            background: #4CAF50;
-        }
-
-        .accuracy-toggle input[type="checkbox"]::before {
-            content: '';
-            position: absolute;
-            width: 22px;
-            height: 22px;
-            background: #fff;
-            border-radius: 50%;
-            top: 2px;
-            left: 2px;
-            transition: all 0.3s ease;
-        }
-
-        .accuracy-toggle input[type="checkbox"]:checked::before {
-            left: 26px;
-        }
-
-        /* 🔲 四角邊框圖片位置設定 */
-        .focus-corner {
-            position: absolute;
-            width: 40px;
-            height: 40px;
-            background-size: cover;
-        }
-
-        .corner-tl {
-            top: calc(50% - 120px);
-            left: calc(50% - 120px);
-            background-image: url('https://i.imgur.com/OxEaF3W.png');
-        }
-
-        .corner-tr {
-            top: calc(50% - 120px);
-            right: calc(50% - 120px);
-            background-image: url('https://i.imgur.com/EzPtyUN.png');
-        }
-
-        .corner-bl {
-            bottom: calc(50% - 120px);
-            left: calc(50% - 120px);
-            background-image: url('https://i.imgur.com/dj94z1z.png');
-        }
-
-        .corner-br {
-            bottom: calc(50% - 120px);
-            right: calc(50% - 120px);
-            background-image: url('https://i.imgur.com/jREszmR.png');
-        }
-
-        /* 🔄 對焦動畫 */
-        .focus-animate {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 240px;
-            height: 240px;
-            transform: translate(-50%, -50%);
-            border-radius: 16px;
-            box-shadow: 0 0 0 0 rgba(255,255,255,0.3);
-            animation: pulseFocus 2s infinite;
-        }
-
-        @keyframes pulseFocus {
-            0% { box-shadow: 0 0 0 0 rgba(255,255,255,0.4); }
-            70% { box-shadow: 0 0 0 30px rgba(255,255,255,0); }
-            100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); }
-        }
-
-        /* 旋轉鏡頭按鈕 */
-        .rotate-camera {
-            position: absolute;
-            top: 100px;
-            right: 20px;
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
-
-        .rotate-camera:hover {
-            background: rgba(0, 0, 0, 0.8);
-        }
-
-        .rotate-camera svg {
-            width: 24px;
-            height: 24px;
-            fill: #fff;
-        }
-
-        /* 縮放滑桿 */
-        .zoom-slider {
-            position: absolute;
-            right: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            height: 200px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .zoom-track {
-            width: 4px;
-            height: 150px;
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 2px;
-            position: relative;
-        }
-
-        .zoom-thumb {
-            position: absolute;
-            width: 30px;
-            height: 30px;
-            background: #fff;
-            border-radius: 50%;
-            left: 50%;
-            transform: translateX(-50%);
-            top: 50%;
-            cursor: grab;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-        }
-
-        .zoom-thumb:active {
-            cursor: grabbing;
-        }
-
-        .zoom-value {
-            color: #fff;
-            font-size: 12px;
-            margin-top: 5px;
-        }
-
-        /* 底部控制區 */
-        .camera-controls {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            padding: 30px 20px 40px;
-            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
-        }
-
-        .controls-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 50px;
-        }
-
-        /* 拍照按鈕 */
-        .capture-button {
-            width: 72px;
-            height: 72px;
-            border-radius: 50%;
-            background: #4CAF50;
-            border: 4px solid #fff;
-            cursor: pointer;
-            position: relative;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-        }
-
-        .capture-button:active {
-            transform: scale(0.95);
-        }
-
-        /* 側邊按鈕 */
-        .side-button {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
-
-        .side-button:hover {
-            opacity: 0.7;
-        }
-
-        .side-button svg {
-            width: 28px;
-            height: 28px;
-            fill: #fff;
-        }
-
-        /* 結果面板 */
-        .result-panel {
-            position: fixed;
-            bottom: -100%;
-            left: 0;
-            right: 0;
-            height: 85vh;
-            background: #fff;
-            border-radius: 30px 30px 0 0;
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 2000;
-            color: #000;
-            overflow: hidden;
-            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.2);
-        }
-
-        .result-panel.active {
-            bottom: 0;
-        }
-
-        .panel-handle {
-            width: 60px;
-            height: 5px;
-            background: #ddd;
-            border-radius: 3px;
-            margin: 15px auto;
-        }
-
-        .result-content {
-            padding: 20px;
-            overflow-y: auto;
-            height: calc(100% - 50px);
-            padding-bottom: 80px;
-        }
-        
-        /* 標籤頁切換 */
-        .tab-container {
-            display: flex;
-            background: #f5f5f5;
-            border-radius: 12px;
-            padding: 4px;
-            margin-bottom: 20px;
-            position: sticky;
-            top: -20px;
-            z-index: 100;
-            backdrop-filter: blur(10px);
-        }
-        
-        .tab-button {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            background: transparent;
-            color: #666;
-            font-size: 16px;
-            font-weight: 500;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .tab-button.active {
-            background: #fff;
-            color: #333;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-        
-        .tab-content {
-            display: none;
-        }
-        
-        .tab-content.active {
-            display: block;
-        }
-
-        .result-image {
-            width: 100%;
-            height: 250px;
-            object-fit: cover;
-            border-radius: 15px;
-            margin-bottom: 20px;
-        }
-
-        .price-section {
-            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-            color: white;
-            padding: 25px;
-            border-radius: 20px;
-            margin-bottom: 25px;
-            text-align: center;
-            box-shadow: 0 5px 20px rgba(76, 175, 80, 0.3);
-        }
-
-        .price-label {
-            font-size: 16px;
-            opacity: 0.9;
-            margin-bottom: 5px;
-        }
-
-        .price-value {
-            font-size: 48px;
-            font-weight: 700;
-            margin: 10px 0;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-        }
-
-        .price-note {
-            font-size: 14px;
-            opacity: 0.8;
-            font-style: italic;
-        }
-
-        .info-section {
-            margin-bottom: 25px;
-        }
-
-        .info-title {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 15px;
-            color: #333;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .info-content {
-            font-size: 16px;
-            line-height: 1.6;
-            color: #666;
-        }
-        
-        /* 特性標籤 */
-        .feature-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 20px;
-        }
-        
-        .feature-tag {
-            background: #f0f0f0;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            color: #555;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .feature-tag.highlight {
-            background: #e8f5e9;
-            color: #2e7d32;
-        }
-        
-        /* 規格卡片 */
-        .spec-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-        
-        .spec-card {
-            background: #f8f8f8;
-            padding: 15px;
-            border-radius: 12px;
-            text-align: center;
-        }
-        
-        .spec-value {
-            font-size: 24px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 5px;
-        }
-        
-        .spec-label {
-            font-size: 14px;
-            color: #666;
-        }
-        
-        /* 詳細資訊列表 */
-        .detail-list {
-            background: #f8f8f8;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        
-        .detail-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid #e0e0e0;
-        }
-        
-        .detail-item:last-child {
-            border-bottom: none;
-        }
-        
-        .detail-label {
-            color: #666;
-            font-size: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .detail-value {
-            color: #333;
-            font-size: 15px;
-            font-weight: 500;
-            text-align: right;
-        }
-        
-        /* 使用指南卡片 */
-        .guide-card {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            padding: 20px;
-            border-radius: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .guide-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 10px;
-        }
-        
-        .guide-tips {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        
-        .tip-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-        }
-        
-        .tip-icon {
-            width: 24px;
-            height: 24px;
-            background: #4CAF50;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-        
-        .tip-text {
-            flex: 1;
-            color: #555;
-            font-size: 15px;
-            line-height: 1.5;
-        }
-        
-        /* 相關推薦 */
-        .related-section {
-            margin-top: 30px;
-        }
-        
-        .related-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 15px;
-            color: #333;
-        }
-        
-        .related-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-        }
-        
-        .related-item {
-            background: #f5f5f5;
-            border-radius: 10px;
-            padding: 10px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .related-item:hover {
-            background: #e8e8e8;
-            transform: translateY(-2px);
-        }
-        
-        .related-icon {
-            font-size: 30px;
-            margin-bottom: 5px;
-        }
-        
-        .related-name {
-            font-size: 12px;
-            color: #666;
-        }
-
-        .close-result {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: rgba(0, 0, 0, 0.1);
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-            z-index: 101;
-        }
-
-        .close-result:hover {
-            background: rgba(0, 0, 0, 0.2);
-            transform: scale(1.1);
-        }
-
-        /* 載入動畫 */
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.9);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 3000;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .loading-overlay.active {
-            display: flex;
-        }
-
-        .loader {
-            width: 60px;
-            height: 60px;
-            border: 3px solid rgba(255, 255, 255, 0.1);
-            border-top-color: #4CAF50;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .loading-text {
-            color: #fff;
-            font-size: 18px;
-            margin-top: 10px;
-        }
-
-        /* 拍照預覽 */
-        .photo-preview {
-            display: none;
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #000;
-            z-index: 1500;
-        }
-
-        .photo-preview img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-
-        /* 提示訊息 */
-        .tip-message {
-            position: absolute;
-            top: 100px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
-            color: #fff;
-            padding: 15px 25px;
-            border-radius: 30px;
-            font-size: 14px;
-            backdrop-filter: blur(10px);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .tip-message.show {
-            opacity: 1;
-        }
-
-        /* 滑動提示 */
-        .swipe-hint {
-            position: absolute;
-            bottom: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 12px;
-            color: #999;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            animation: bounce 2s infinite;
-        }
-        
-        @keyframes bounce {
-            0%, 100% { transform: translateX(-50%) translateY(0); }
-            50% { transform: translateX(-50%) translateY(-5px); }
-        }
-        
-        /* 底部安全區域 */
-        .bottom-safe-area {
-            height: 20px;
-            background: #fff;
-        }
-
-        /* 分享功能樣式 */
-        .share-section {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 15px;
-            margin: 20px 0;
-            text-align: center;
-        }
-        
-        .share-buttons {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-top: 15px;
-            flex-wrap: wrap;
-        }
-        
-        .share-btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 25px;
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            font-size: 14px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s;
-            backdrop-filter: blur(10px);
-        }
-        
-        .share-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
-        }
-        
-        /* 分享圖卡畫布 */
-        #shareCanvas {
-            display: none;
-        }
-
-        /* 升級 Pro 彈窗 */
-        .pro-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 4000;
-            backdrop-filter: blur(10px);
-        }
-
-        .pro-modal.active {
-            display: flex;
-        }
-
-        .pro-content {
-            background: #fff;
-            border-radius: 20px;
-            padding: 30px;
-            max-width: 400px;
-            width: 90%;
-            text-align: center;
-            position: relative;
-            animation: slideUp 0.3s ease;
-        }
-
-        @keyframes slideUp {
-            from {
-                transform: translateY(100px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        .pro-close {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            width: 30px;
-            height: 30px;
-            border: none;
-            background: #f0f0f0;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .pro-icon {
-            font-size: 60px;
-            margin-bottom: 20px;
-        }
-
-        .pro-title {
-            font-size: 24px;
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 15px;
-        }
-
-        .pro-subtitle {
-            font-size: 16px;
-            color: #666;
-            margin-bottom: 25px;
-            line-height: 1.5;
-        }
-
-        .pro-features {
-            text-align: left;
-            margin-bottom: 25px;
-        }
-
-        .pro-feature {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 12px;
-            color: #555;
-        }
-
-        .pro-feature svg {
-            width: 20px;
-            height: 20px;
-            fill: #4CAF50;
-            flex-shrink: 0;
-        }
-
-        .pro-button {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 18px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
-        }
-
-        .pro-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
-        }
-
-        .pro-price {
-            font-size: 14px;
-            color: #999;
-            margin-top: 10px;
-        }
-
-        /* 響應式設計 */
-        @media (max-width: 500px) {
-            .app-container {
-                max-width: 100%;
-            }
-            
-            .nav-header {
-                max-width: 100%;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="app-container">
-        <!-- 導航欄 -->
-        <div class="nav-header">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="white" onclick="alert('關於萬物價格掃描器\\n\\n版本：1.0.0\\n使用 GPT-4o 技術\\n\\n掃描任何物品，立即獲得價格！')">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
-            </svg>
-            <div class="app-title">萬物價格掃描器</div>
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="white" onclick="alert('功能開發中...\\n\\n• 分享掃描結果\\n• 查看掃描歷史\\n• 設定偏好\\n• 意見回饋')">
-                <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
-            </svg>
-        </div>
-
-        <!-- 相機視圖 -->
-        <div class="camera-view">
-            <video id="cameraFeed" autoplay playsinline></video>
-            <canvas id="photoCanvas" style="display: none;"></canvas>
-            
-            <!-- 旋轉鏡頭按鈕 -->
-            <button class="rotate-camera" id="rotateCamera">
-                <svg viewBox="0 0 24 24">
-                    <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>
-                </svg>
-            </button>
-            
-            <!-- 縮放滑桿 -->
-            <div class="zoom-slider" id="zoomSlider">
-                <div class="zoom-track">
-                    <div class="zoom-thumb" id="zoomThumb"></div>
-                </div>
-                <div class="zoom-value" id="zoomValue">1.0x</div>
-            </div>
-            
-            <!-- 掃描框 -->
+<!-- 掃描框 -->
             <div class="camera-overlay">
-                <!-- 🔄 對焦動畫 -->
+                <!-- 對焦動畫 -->
                 <div class="focus-animate"></div>
-                <!-- 🔲 四角邊框圖示 -->
-                <div class="focus-corner corner-tl"></div>
-                <div class="focus-corner corner-tr"></div>
-                <div class="focus-corner corner-bl"></div>
-                <div class="focus-corner corner-br"></div>
+                
+                <div class="scan-frame">
+                    <div class="scan-corners">
+                        <div class="corner top-left"></div>
+                        <div class="corner top-right"></div>
+                        <div class="corner bottom-left"></div>
+                        <div class="corner bottom-right"></div>
+                    </div>
+                </div>
+                
                 <!-- 提示文字 -->
-                <div class="capture-hint">請將目標清晰地置於框內</div>
+                <div class="capture-hint">請將物品清晰地置於框內</div>
+                
+                <!-- 提示訊息 -->
                 <div class="tip-message" id="tipMessage">
                     將物品置於框內，點擊拍照獲取價格
                 </div>
             </div>
-
-            <!-- 底部控制區 -->
-            <div class="camera-controls">
-                <div class="accuracy-toggle">
-                    <label for="accuracySwitch">提高準確度</label>
-                    <input type="checkbox" id="accuracySwitch" />
+            
+            <!-- 準確度開關 -->
+            <div class="accuracy-toggle">
+                <span class="accuracy-label">提高準確度</span>
+                <div class="toggle-switch" id="accuracyToggle">
+                    <input type="checkbox" id="accuracySwitch">
                 </div>
+            </div>
+
+            <!-- 底部控制 -->
+            <div class="camera-controls">
                 <div class="controls-container">
                     <button class="side-button" id="galleryBtn">
                         <svg viewBox="0 0 24 24">
@@ -1028,7 +72,7 @@
             <div class="loader"></div>
             <div class="loading-text">AI 正在分析中...</div>
         </div>
-
+        
         <!-- 升級 Pro 彈窗 -->
         <div class="pro-modal" id="proModal">
             <div class="pro-content">
@@ -1102,6 +146,7 @@
         const photoCanvas = document.getElementById('photoCanvas');
         const tipMessage = document.getElementById('tipMessage');
         const rotateCamera = document.getElementById('rotateCamera');
+        const accuracyToggle = document.getElementById('accuracyToggle');
         const accuracySwitch = document.getElementById('accuracySwitch');
         const proModal = document.getElementById('proModal');
         const closeProModal = document.getElementById('closeProModal');
@@ -1291,13 +336,9 @@
         });
         
         // 準確度開關
-        accuracySwitch.addEventListener('change', () => {
-            if (accuracySwitch.checked) {
-                // 顯示升級提示
-                proModal.classList.add('active');
-                // 取消勾選
-                accuracySwitch.checked = false;
-            }
+        accuracyToggle.addEventListener('click', () => {
+            // 顯示升級提示
+            proModal.classList.add('active');
         });
         
         // 關閉升級彈窗
@@ -1951,4 +992,1014 @@
         });
     </script>
 </body>
-</html>
+</html><!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>萬物價格掃描器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #000;
+            color: #fff;
+            overflow-x: hidden;
+            position: relative;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            max-width: 500px;
+            margin: 0 auto;
+            min-height: 100vh;
+            position: relative;
+            background: #0a0a0a;
+        }
+
+        /* 頂部導航欄 */
+        .nav-header {
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 500px;
+            padding: 15px 20px;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .app-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #fff;
+            text-align: center;
+            flex: 1;
+        }
+
+        .nav-icon {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+
+        .nav-icon:hover {
+            opacity: 0.7;
+        }
+
+        /* 相機視圖 */
+        .camera-view {
+            position: relative;
+            height: 100vh;
+            overflow: hidden;
+            background: #000;
+        }
+
+        #cameraFeed {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform-origin: center;
+            transition: transform 0.3s ease;
+        }
+
+        .camera-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 掃描框 */
+        .scan-frame {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 320px;
+            height: 320px;
+            pointer-events: none;
+        }
+
+        /* 掃描框角落 */
+        .scan-corners {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .corner {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border: 4px solid #fff;
+        }
+
+        .corner.top-left {
+            top: 0;
+            left: 0;
+            border-right: none;
+            border-bottom: none;
+            border-top-left-radius: 20px;
+        }
+
+        .corner.top-right {
+            top: 0;
+            right: 0;
+            border-left: none;
+            border-bottom: none;
+            border-top-right-radius: 20px;
+        }
+
+        .corner.bottom-left {
+            bottom: 0;
+            left: 0;
+            border-right: none;
+            border-top: none;
+            border-bottom-left-radius: 20px;
+        }
+
+        .corner.bottom-right {
+            bottom: 0;
+            right: 0;
+            border-left: none;
+            border-top: none;
+            border-bottom-right-radius: 20px;
+        }
+
+        /* 對焦動畫 */
+        .focus-animate {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 240px;
+            height: 240px;
+            transform: translate(-50%, -50%);
+            border-radius: 16px;
+            box-shadow: 0 0 0 0 rgba(255,255,255,0.3);
+            animation: pulseFocus 2s infinite;
+        }
+
+        @keyframes pulseFocus {
+            0% { box-shadow: 0 0 0 0 rgba(255,255,255,0.4); }
+            70% { box-shadow: 0 0 0 30px rgba(255,255,255,0); }
+            100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); }
+        }
+
+        /* 掃描提示文字 */
+        .capture-hint {
+            position: absolute;
+            top: 12%;
+            width: 100%;
+            text-align: center;
+            font-size: 17px;
+            color: white;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        /* 旋轉鏡頭按鈕 */
+        .rotate-camera {
+            position: absolute;
+            top: 100px;
+            right: 20px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .rotate-camera:hover {
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        .rotate-camera svg {
+            width: 24px;
+            height: 24px;
+            fill: #fff;
+        }
+
+        /* 縮放滑桿 */
+        .zoom-slider {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            height: 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .zoom-track {
+            width: 4px;
+            height: 150px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+            position: relative;
+        }
+
+        .zoom-thumb {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: #fff;
+            border-radius: 50%;
+            left: 50%;
+            transform: translateX(-50%);
+            top: 50%;
+            cursor: grab;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .zoom-thumb:active {
+            cursor: grabbing;
+        }
+
+        .zoom-value {
+            color: #fff;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        /* 準確度開關 */
+        .accuracy-toggle {
+            position: absolute;
+            bottom: 180px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 30px;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .accuracy-label {
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .toggle-switch {
+            width: 50px;
+            height: 26px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 13px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            background: #fff;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-switch.active::after {
+            left: 26px;
+        }
+
+        /* 底部控制區 */
+        .camera-controls {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 30px 20px 40px;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+        }
+
+        .controls-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 50px;
+        }
+
+        /* 拍照按鈕 */
+        .capture-button {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: #4CAF50;
+            border: 4px solid #fff;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .capture-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .capture-button:active {
+            transform: scale(0.95);
+        }
+
+        /* 側邊按鈕 */
+        .side-button {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .side-button:hover {
+            opacity: 0.7;
+        }
+
+        .side-button svg {
+            width: 28px;
+            height: 28px;
+            fill: #fff;
+        }
+
+        /* 升級 Pro 彈窗 */
+        .pro-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 4000;
+            backdrop-filter: blur(10px);
+        }
+
+        .pro-modal.active {
+            display: flex;
+        }
+
+        .pro-content {
+            background: #fff;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            position: relative;
+            animation: slideUp 0.3s ease;
+            color: #000;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .pro-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 30px;
+            height: 30px;
+            border: none;
+            background: #f0f0f0;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pro-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        .pro-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .pro-subtitle {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        .pro-features {
+            text-align: left;
+            margin-bottom: 25px;
+        }
+
+        .pro-feature {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            color: #555;
+        }
+
+        .pro-feature svg {
+            width: 20px;
+            height: 20px;
+            fill: #4CAF50;
+            flex-shrink: 0;
+        }
+
+        .pro-button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .pro-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+        }
+
+        .pro-price {
+            font-size: 14px;
+            color: #999;
+            margin-top: 10px;
+        }
+
+        /* 結果面板 */
+        .result-panel {
+            position: fixed;
+            bottom: -100%;
+            left: 0;
+            right: 0;
+            height: 85vh;
+            background: #fff;
+            border-radius: 30px 30px 0 0;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 2000;
+            color: #000;
+            overflow: hidden;
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .result-panel.active {
+            bottom: 0;
+        }
+
+        .panel-handle {
+            width: 60px;
+            height: 5px;
+            background: #ddd;
+            border-radius: 3px;
+            margin: 15px auto;
+        }
+
+        .result-content {
+            padding: 20px;
+            overflow-y: auto;
+            height: calc(100% - 50px);
+            padding-bottom: 80px;
+        }
+        
+        /* 標籤頁切換 */
+        .tab-container {
+            display: flex;
+            background: #f5f5f5;
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 20px;
+            position: sticky;
+            top: -20px;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+        
+        .tab-button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: transparent;
+            color: #666;
+            font-size: 16px;
+            font-weight: 500;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .tab-button.active {
+            background: #fff;
+            color: #333;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+
+        .result-image {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .price-section {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 20px;
+            margin-bottom: 25px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(76, 175, 80, 0.3);
+        }
+
+        .price-label {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .price-value {
+            font-size: 48px;
+            font-weight: 700;
+            margin: 10px 0;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .price-note {
+            font-size: 14px;
+            opacity: 0.8;
+            font-style: italic;
+        }
+
+        .info-section {
+            margin-bottom: 25px;
+        }
+
+        .info-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-content {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #666;
+        }
+        
+        /* 特性標籤 */
+        .feature-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .feature-tag {
+            background: #f0f0f0;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            color: #555;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .feature-tag.highlight {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        /* 規格卡片 */
+        .spec-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .spec-card {
+            background: #f8f8f8;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .spec-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .spec-label {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        /* 詳細資訊列表 */
+        .detail-list {
+            background: #f8f8f8;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+        
+        .detail-label {
+            color: #666;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .detail-value {
+            color: #333;
+            font-size: 15px;
+            font-weight: 500;
+            text-align: right;
+        }
+        
+        /* 使用指南卡片 */
+        .guide-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .guide-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .guide-tips {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .tip-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        
+        .tip-icon {
+            width: 24px;
+            height: 24px;
+            background: #4CAF50;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .tip-text {
+            flex: 1;
+            color: #555;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+        
+        /* 相關推薦 */
+        .related-section {
+            margin-top: 30px;
+        }
+        
+        .related-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .related-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        
+        .related-item {
+            background: #f5f5f5;
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .related-item:hover {
+            background: #e8e8e8;
+            transform: translateY(-2px);
+        }
+        
+        .related-icon {
+            font-size: 30px;
+            margin-bottom: 5px;
+        }
+        
+        .related-name {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .close-result {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.1);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 101;
+        }
+
+        .close-result:hover {
+            background: rgba(0, 0, 0, 0.2);
+            transform: scale(1.1);
+        }
+
+        /* 載入動畫 */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .loader {
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #4CAF50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: #fff;
+            font-size: 18px;
+            margin-top: 10px;
+        }
+
+        /* 拍照預覽 */
+        .photo-preview {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 1500;
+        }
+
+        .photo-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        /* 提示訊息 */
+        .tip-message {
+            position: absolute;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 15px 25px;
+            border-radius: 30px;
+            font-size: 14px;
+            backdrop-filter: blur(10px);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .tip-message.show {
+            opacity: 1;
+        }
+
+        /* 滑動提示 */
+        .swipe-hint {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            color: #999;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(-5px); }
+        }
+        
+        /* 底部安全區域 */
+        .bottom-safe-area {
+            height: 20px;
+            background: #fff;
+        }
+
+        /* 分享功能樣式 */
+        .share-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .share-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .share-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+        
+        .share-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        /* 分享圖卡畫布 */
+        #shareCanvas {
+            display: none;
+        }
+        
+        /* 響應式設計 */
+        @media (max-width: 500px) {
+            .app-container {
+                max-width: 100%;
+            }
+            
+            .nav-header {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 導航欄 -->
+        <div class="nav-header">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="white" onclick="alert('關於萬物價格掃描器\\n\\n版本：1.0.0\\n使用 GPT-4o 技術\\n\\n掃描任何物品，立即獲得價格！')">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+            </svg>
+            <div class="app-title">萬物價格掃描器</div>
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="white" onclick="alert('功能開發中...\\n\\n• 分享掃描結果\\n• 查看掃描歷史\\n• 設定偏好\\n• 意見回饋')">
+                <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+            </svg>
+        </div>
+
+        <!-- 相機視圖 -->
+        <div class="camera-view">
+            <video id="cameraFeed" autoplay playsinline></video>
+            <canvas id="photoCanvas" style="display: none;"></canvas>
+            
+            <!-- 旋轉鏡頭按鈕 -->
+            <button class="rotate-camera" id="rotateCamera">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>
+                </svg>
+            </button>
+            
+            <!-- 縮放滑桿 -->
+            <div class="zoom-slider" id="zoomSlider">
+                <div class="zoom-track">
+                    <div class="zoom-thumb" id="zoomThumb"></div>
+                </div>
+                <div class="zoom-value" id="zoomValue">1.0x</div>
+            </div>
+            
+            <!-- 掃描框 -->
+            <div class="camera-overlay">
+                <!-- 對焦動
