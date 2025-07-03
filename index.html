@@ -87,113 +87,51 @@
             right: 0;
             bottom: 0;
             pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        /* 掃描框 */
-        .scan-frame {
+        /* 掃描提示文字 */
+        .capture-hint {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 320px;
-            height: 320px;
+            top: 12%;
+            width: 100%;
+            text-align: center;
+            font-size: 17px;
+            color: white;
+            z-index: 10;
             pointer-events: none;
         }
 
-        .scan-corners {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-        }
-
-        .corner {
-            position: absolute;
-            width: 60px;
-            height: 60px;
-            border: 4px solid #fff;
-        }
-
-        .corner.top-left {
-            top: 0;
-            left: 0;
-            border-right: none;
-            border-bottom: none;
-            border-top-left-radius: 20px;
-        }
-
-        .corner.top-right {
-            top: 0;
-            right: 0;
-            border-left: none;
-            border-bottom: none;
-            border-top-right-radius: 20px;
-        }
-
-        .corner.bottom-left {
-            bottom: 0;
-            left: 0;
-            border-right: none;
-            border-top: none;
-            border-bottom-left-radius: 20px;
-        }
-
-        .corner.bottom-right {
-            bottom: 0;
-            right: 0;
-            border-left: none;
-            border-top: none;
-            border-bottom-right-radius: 20px;
-        }
-
-        /* 掃描文字提示 */
-        .scan-text {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: #fff;
-            font-size: 18px;
-            text-align: center;
-            white-space: nowrap;
-        }
-
-        /* 準確度開關區域 */
+        /* 準確度開關 */
         .accuracy-toggle {
-            position: absolute;
-            bottom: 180px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.6);
-            border-radius: 30px;
-            padding: 12px 20px;
             display: flex;
+            justify-content: center;
             align-items: center;
-            gap: 15px;
-            pointer-events: all;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .accuracy-label {
-            color: #fff;
+            gap: 10px;
+            margin-bottom: 15px;
+            color: white;
             font-size: 16px;
         }
 
-        .toggle-switch {
+        .accuracy-toggle input[type="checkbox"] {
             width: 50px;
             height: 26px;
             background: rgba(255, 255, 255, 0.3);
             border-radius: 13px;
             position: relative;
             cursor: pointer;
+            appearance: none;
+            outline: none;
             transition: all 0.3s ease;
         }
 
-        .toggle-switch.active {
+        .accuracy-toggle input[type="checkbox"]:checked {
             background: #4CAF50;
         }
 
-        .toggle-switch::after {
+        .accuracy-toggle input[type="checkbox"]::before {
             content: '';
             position: absolute;
             width: 22px;
@@ -205,8 +143,87 @@
             transition: all 0.3s ease;
         }
 
-        .toggle-switch.active::after {
+        .accuracy-toggle input[type="checkbox"]:checked::before {
             left: 26px;
+        }
+
+        /* 🔲 四角邊框圖片位置設定 */
+        .focus-corner {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background-size: cover;
+        }
+
+        .corner-tl {
+            top: calc(50% - 120px);
+            left: calc(50% - 120px);
+            background-image: url('https://i.imgur.com/OxEaF3W.png');
+        }
+
+        .corner-tr {
+            top: calc(50% - 120px);
+            right: calc(50% - 120px);
+            background-image: url('https://i.imgur.com/EzPtyUN.png');
+        }
+
+        .corner-bl {
+            bottom: calc(50% - 120px);
+            left: calc(50% - 120px);
+            background-image: url('https://i.imgur.com/dj94z1z.png');
+        }
+
+        .corner-br {
+            bottom: calc(50% - 120px);
+            right: calc(50% - 120px);
+            background-image: url('https://i.imgur.com/jREszmR.png');
+        }
+
+        /* 🔄 對焦動畫 */
+        .focus-animate {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 240px;
+            height: 240px;
+            transform: translate(-50%, -50%);
+            border-radius: 16px;
+            box-shadow: 0 0 0 0 rgba(255,255,255,0.3);
+            animation: pulseFocus 2s infinite;
+        }
+
+        @keyframes pulseFocus {
+            0% { box-shadow: 0 0 0 0 rgba(255,255,255,0.4); }
+            70% { box-shadow: 0 0 0 30px rgba(255,255,255,0); }
+            100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); }
+        }
+
+        /* 旋轉鏡頭按鈕 */
+        .rotate-camera {
+            position: absolute;
+            top: 100px;
+            right: 20px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .rotate-camera:hover {
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        .rotate-camera svg {
+            width: 24px;
+            height: 24px;
+            fill: #fff;
         }
 
         /* 縮放滑桿 */
@@ -220,7 +237,6 @@
             flex-direction: column;
             align-items: center;
             gap: 10px;
-            pointer-events: all;
         }
 
         .zoom-track {
@@ -262,7 +278,6 @@
             right: 0;
             padding: 30px 20px 40px;
             background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
-            pointer-events: none;
         }
 
         .controls-container {
@@ -270,7 +285,6 @@
             align-items: center;
             justify-content: center;
             gap: 50px;
-            pointer-events: all;
         }
 
         /* 拍照按鈕 */
@@ -311,35 +325,6 @@
         .side-button svg {
             width: 28px;
             height: 28px;
-            fill: #fff;
-        }
-
-        /* 旋轉鏡頭按鈕 */
-        .rotate-camera {
-            position: absolute;
-            top: 100px;
-            right: 20px;
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            pointer-events: all;
-            transition: all 0.3s ease;
-        }
-
-        .rotate-camera:hover {
-            background: rgba(0, 0, 0, 0.8);
-        }
-
-        .rotate-camera svg {
-            width: 24px;
-            height: 24px;
             fill: #fff;
         }
 
@@ -814,110 +799,127 @@
         #shareCanvas {
             display: none;
         }
-        
-        /* 自定義問句輸入 */
-        .custom-question {
-            background: rgba(0, 0, 0, 0.05);
-            border: 2px solid rgba(76, 175, 80, 0.3);
-            border-radius: 15px;
-            padding: 15px;
-            margin-bottom: 20px;
-            position: relative;
+
+        /* 升級 Pro 彈窗 */
+        .pro-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 4000;
+            backdrop-filter: blur(10px);
         }
-        
-        .question-input {
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 10px;
-            background: white;
-            font-size: 16px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+
+        .pro-modal.active {
+            display: flex;
         }
-        
-        .question-btn {
-            position: absolute;
-            right: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: #4CAF50;
-            color: white;
-            border: none;
+
+        .pro-content {
+            background: #fff;
             border-radius: 20px;
-            padding: 8px 20px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            position: relative;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .pro-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 30px;
+            height: 30px;
+            border: none;
+            background: #f0f0f0;
+            border-radius: 50%;
             cursor: pointer;
-            font-size: 14px;
-            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        
-        .question-btn:hover {
-            background: #45a049;
+
+        .pro-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
         }
-        
-        /* 熱門發現區 */
-        .trending-section {
-            margin-top: 30px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 15px;
-        }
-        
-        .trending-title {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 15px;
+
+        .pro-title {
+            font-size: 24px;
+            font-weight: 700;
             color: #333;
+            margin-bottom: 15px;
+        }
+
+        .pro-subtitle {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        .pro-features {
+            text-align: left;
+            margin-bottom: 25px;
+        }
+
+        .pro-feature {
             display: flex;
             align-items: center;
             gap: 10px;
+            margin-bottom: 12px;
+            color: #555;
         }
-        
-        .trending-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 15px;
+
+        .pro-feature svg {
+            width: 20px;
+            height: 20px;
+            fill: #4CAF50;
+            flex-shrink: 0;
         }
-        
-        .trending-item {
-            background: white;
+
+        .pro-button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            border: none;
             border-radius: 10px;
-            overflow: hidden;
+            font-size: 18px;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
         }
-        
-        .trending-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+
+        .pro-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
         }
-        
-        .trending-img {
-            width: 100%;
-            height: 120px;
-            object-fit: cover;
-        }
-        
-        .trending-info {
-            padding: 10px;
-        }
-        
-        .trending-name {
+
+        .pro-price {
             font-size: 14px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 5px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            color: #999;
+            margin-top: 10px;
         }
-        
-        .trending-price {
-            font-size: 16px;
-            color: #4CAF50;
-            font-weight: 700;
-        }
-        
+
         /* 響應式設計 */
         @media (max-width: 500px) {
             .app-container {
@@ -948,31 +950,43 @@
             <video id="cameraFeed" autoplay playsinline></video>
             <canvas id="photoCanvas" style="display: none;"></canvas>
             
+            <!-- 旋轉鏡頭按鈕 -->
+            <button class="rotate-camera" id="rotateCamera">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>
+                </svg>
+            </button>
+            
+            <!-- 縮放滑桿 -->
+            <div class="zoom-slider" id="zoomSlider">
+                <div class="zoom-track">
+                    <div class="zoom-thumb" id="zoomThumb"></div>
+                </div>
+                <div class="zoom-value" id="zoomValue">1.0x</div>
+            </div>
+            
             <!-- 掃描框 -->
             <div class="camera-overlay">
-                <div class="scan-frame">
-                    <div class="scan-corners">
-                        <div class="corner top-left"></div>
-                        <div class="corner top-right"></div>
-                        <div class="corner bottom-left"></div>
-                        <div class="corner bottom-right"></div>
-                    </div>
-                </div>
-                
-                <!-- 提示訊息 -->
+                <!-- 🔄 對焦動畫 -->
+                <div class="focus-animate"></div>
+                <!-- 🔲 四角邊框圖示 -->
+                <div class="focus-corner corner-tl"></div>
+                <div class="focus-corner corner-tr"></div>
+                <div class="focus-corner corner-bl"></div>
+                <div class="focus-corner corner-br"></div>
+                <!-- 提示文字 -->
+                <div class="capture-hint">請將目標清晰地置於框內</div>
                 <div class="tip-message" id="tipMessage">
                     將物品置於框內，點擊拍照獲取價格
                 </div>
             </div>
 
-            <!-- 底部控制 -->
+            <!-- 底部控制區 -->
             <div class="camera-controls">
-                            <div class="custom-question" style="margin: 0 20px 20px; display: none;" id="questionBox">
-                <input type="text" class="question-input" id="customQuestion" 
-                       placeholder="問個問題，例如：這個多少錢？哪裡買？做什麼用的？" 
-                       value="這個東西多少錢？哪裡可以買到？">
-                <button class="question-btn" onclick="updateQuestion()">更新</button>
-            </div>
+                <div class="accuracy-toggle">
+                    <label for="accuracySwitch">提高準確度</label>
+                    <input type="checkbox" id="accuracySwitch" />
+                </div>
                 <div class="controls-container">
                     <button class="side-button" id="galleryBtn">
                         <svg viewBox="0 0 24 24">
@@ -982,7 +996,7 @@
                     
                     <button class="capture-button" id="captureBtn"></button>
                     
-                    <button class="side-button" id="flashBtn">
+                    <button class="side-button" id="flashBtn" style="opacity: 0; pointer-events: none;">
                         <svg viewBox="0 0 24 24">
                             <path d="M7 2v11h3v9l7-12h-4l4-8z"/>
                         </svg>
@@ -1014,36 +1028,118 @@
             <div class="loader"></div>
             <div class="loading-text">AI 正在分析中...</div>
         </div>
+
+        <!-- 升級 Pro 彈窗 -->
+        <div class="pro-modal" id="proModal">
+            <div class="pro-content">
+                <button class="pro-close" id="closeProModal">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#333">
+                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                    </svg>
+                </button>
+                
+                <div class="pro-icon">⭐</div>
+                <h2 class="pro-title">升級至專業版</h2>
+                <p class="pro-subtitle">解鎖高準確度模式，獲得更精準的價格分析</p>
+                
+                <div class="pro-features">
+                    <div class="pro-feature">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                        </svg>
+                        <span>99% 準確度辨識</span>
+                    </div>
+                    <div class="pro-feature">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                        </svg>
+                        <span>即時市場價格更新</span>
+                    </div>
+                    <div class="pro-feature">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                        </svg>
+                        <span>無限次掃描</span>
+                    </div>
+                    <div class="pro-feature">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                        </svg>
+                        <span>批量掃描功能</span>
+                    </div>
+                    <div class="pro-feature">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                        </svg>
+                        <span>價格歷史走勢圖</span>
+                    </div>
+                </div>
+                
+                <button class="pro-button" onclick="alert('專業版功能開發中...')">
+                    立即升級
+                </button>
+                <p class="pro-price">NT$ 99/月 · 首月免費試用</p>
+            </div>
+        </div>
     </div>
 
     <script>
         // 初始化變數
         let stream = null;
         let capturedImage = null;
+        let currentZoom = 1;
+        let facingMode = 'environment';
+        let videoTrack = null;
         
         // DOM 元素
         const cameraFeed = document.getElementById('cameraFeed');
         const captureBtn = document.getElementById('captureBtn');
         const galleryBtn = document.getElementById('galleryBtn');
-        const flashBtn = document.getElementById('flashBtn');
         const resultPanel = document.getElementById('resultPanel');
         const resultContent = document.getElementById('resultContent');
         const closeResult = document.getElementById('closeResult');
         const loadingOverlay = document.getElementById('loadingOverlay');
         const photoCanvas = document.getElementById('photoCanvas');
         const tipMessage = document.getElementById('tipMessage');
+        const rotateCamera = document.getElementById('rotateCamera');
+        const accuracySwitch = document.getElementById('accuracySwitch');
+        const proModal = document.getElementById('proModal');
+        const closeProModal = document.getElementById('closeProModal');
+        const zoomThumb = document.getElementById('zoomThumb');
+        const zoomValue = document.getElementById('zoomValue');
         
         // 初始化相機
         async function initCamera() {
             try {
-                stream = await navigator.mediaDevices.getUserMedia({
+                // 停止現有的流
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                }
+                
+                const constraints = {
                     video: {
-                        facingMode: 'environment',
+                        facingMode: facingMode,
                         width: { ideal: 1920 },
                         height: { ideal: 1080 }
                     }
-                });
+                };
+                
+                stream = await navigator.mediaDevices.getUserMedia(constraints);
                 cameraFeed.srcObject = stream;
+                
+                // 獲取相機能力
+                videoTrack = stream.getVideoTracks()[0];
+                const capabilities = videoTrack.getCapabilities();
+                
+                // 如果支援縮放，設定縮放控制
+                if (capabilities.zoom) {
+                    const minZoom = capabilities.zoom.min || 1;
+                    const maxZoom = Math.min(capabilities.zoom.max || 5, 5); // 限制最大5倍
+                    setupZoomControl(videoTrack, minZoom, maxZoom);
+                } else {
+                    // 使用 CSS 縮放作為後備方案
+                    setupCSSZoom();
+                }
                 
                 // 顯示提示訊息
                 setTimeout(() => {
@@ -1057,6 +1153,163 @@
                 alert('請允許相機權限以使用此應用程式');
             }
         }
+        
+        // 設置硬體縮放控制
+        function setupZoomControl(track, minZoom, maxZoom) {
+            let isDragging = false;
+            let startY = 0;
+            let startTop = 75; // 中間位置
+            
+            const updateZoom = (position) => {
+                const percentage = (150 - position) / 150;
+                const zoom = minZoom + (maxZoom - minZoom) * percentage;
+                
+                track.applyConstraints({
+                    advanced: [{ zoom: zoom }]
+                });
+                
+                currentZoom = zoom;
+                zoomValue.textContent = zoom.toFixed(1) + 'x';
+            };
+            
+            // 滑鼠事件
+            zoomThumb.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                startY = e.clientY;
+                startTop = parseInt(zoomThumb.style.top || 75);
+                e.preventDefault();
+            });
+            
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                
+                const deltaY = e.clientY - startY;
+                let newTop = startTop + deltaY;
+                
+                // 限制範圍
+                newTop = Math.max(0, Math.min(150, newTop));
+                
+                zoomThumb.style.top = newTop + 'px';
+                updateZoom(newTop);
+            });
+            
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+            
+            // 觸控事件
+            zoomThumb.addEventListener('touchstart', (e) => {
+                isDragging = true;
+                startY = e.touches[0].clientY;
+                startTop = parseInt(zoomThumb.style.top || 75);
+                e.preventDefault();
+            });
+            
+            document.addEventListener('touchmove', (e) => {
+                if (!isDragging) return;
+                
+                const deltaY = e.touches[0].clientY - startY;
+                let newTop = startTop + deltaY;
+                
+                newTop = Math.max(0, Math.min(150, newTop));
+                
+                zoomThumb.style.top = newTop + 'px';
+                updateZoom(newTop);
+            });
+            
+            document.addEventListener('touchend', () => {
+                isDragging = false;
+            });
+        }
+        
+        // CSS 縮放作為後備方案
+        function setupCSSZoom() {
+            let isDragging = false;
+            let startY = 0;
+            let startTop = 75;
+            
+            const updateZoom = (position) => {
+                const percentage = (150 - position) / 150;
+                const zoom = 1 + 4 * percentage; // 1x 到 5x
+                
+                cameraFeed.style.transform = `scale(${zoom})`;
+                currentZoom = zoom;
+                zoomValue.textContent = zoom.toFixed(1) + 'x';
+            };
+            
+            // 重複上面的滑鼠和觸控事件處理
+            zoomThumb.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                startY = e.clientY;
+                startTop = parseInt(zoomThumb.style.top || 75);
+                e.preventDefault();
+            });
+            
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                
+                const deltaY = e.clientY - startY;
+                let newTop = startTop + deltaY;
+                newTop = Math.max(0, Math.min(150, newTop));
+                
+                zoomThumb.style.top = newTop + 'px';
+                updateZoom(newTop);
+            });
+            
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+            
+            // 觸控事件
+            zoomThumb.addEventListener('touchstart', (e) => {
+                isDragging = true;
+                startY = e.touches[0].clientY;
+                startTop = parseInt(zoomThumb.style.top || 75);
+                e.preventDefault();
+            });
+            
+            document.addEventListener('touchmove', (e) => {
+                if (!isDragging) return;
+                
+                const deltaY = e.touches[0].clientY - startY;
+                let newTop = startTop + deltaY;
+                newTop = Math.max(0, Math.min(150, newTop));
+                
+                zoomThumb.style.top = newTop + 'px';
+                updateZoom(newTop);
+            });
+            
+            document.addEventListener('touchend', () => {
+                isDragging = false;
+            });
+        }
+        
+        // 旋轉鏡頭
+        rotateCamera.addEventListener('click', async () => {
+            facingMode = facingMode === 'environment' ? 'user' : 'environment';
+            await initCamera();
+        });
+        
+        // 準確度開關
+        accuracySwitch.addEventListener('change', () => {
+            if (accuracySwitch.checked) {
+                // 顯示升級提示
+                proModal.classList.add('active');
+                // 取消勾選
+                accuracySwitch.checked = false;
+            }
+        });
+        
+        // 關閉升級彈窗
+        closeProModal.addEventListener('click', () => {
+            proModal.classList.remove('active');
+        });
+        
+        proModal.addEventListener('click', (e) => {
+            if (e.target === proModal) {
+                proModal.classList.remove('active');
+            }
+        });
         
         // 拍照功能（含圖片壓縮）
         function capturePhoto() {
@@ -1152,33 +1405,33 @@
                         ]
                     };
 
-                            // 取得平台 URL
-        function getPlatformUrl(platform, searchTerm) {
-            const urls = {
-                '蝦皮購物': `https://shopee.tw/search?keyword=${encodeURIComponent(searchTerm)}`,
-                'PChome 24h': `https://24h.pchome.com.tw/search/?q=${encodeURIComponent(searchTerm)}`,
-                'momo購物網': `https://www.momoshop.com.tw/search/searchShop.jsp?keyword=${encodeURIComponent(searchTerm)}`,
-                'Amazon JP': `https://www.amazon.co.jp/s?k=${encodeURIComponent(searchTerm)}`,
-                '淘寶/天貓': `https://s.taobao.com/search?q=${encodeURIComponent(searchTerm)}`,
-                'Yahoo購物': `https://tw.buy.yahoo.com/search/product?p=${encodeURIComponent(searchTerm)}`,
-                '博客來': `https://search.books.com.tw/search/query/key/${encodeURIComponent(searchTerm)}`
-            };
-            return urls[platform] || '#';
-        }
-        
-        // 取得平台圖示
-        function getPlatformIcon(platform) {
-            const icons = {
-                '蝦皮購物': '🛍️',
-                'PChome 24h': '🚚',
-                'momo購物網': '🛒',
-                'Amazon JP': '📦',
-                '淘寶/天貓': '🏪',
-                'Yahoo購物': '🎯',
-                '博客來': '📚'
-            };
-            return icons[platform] || '🛒';
-        }
+                    // 取得平台 URL
+                    function getPlatformUrl(platform, searchTerm) {
+                        const urls = {
+                            '蝦皮購物': `https://shopee.tw/search?keyword=${encodeURIComponent(searchTerm)}`,
+                            'PChome 24h': `https://24h.pchome.com.tw/search/?q=${encodeURIComponent(searchTerm)}`,
+                            'momo購物網': `https://www.momoshop.com.tw/search/searchShop.jsp?keyword=${encodeURIComponent(searchTerm)}`,
+                            'Amazon JP': `https://www.amazon.co.jp/s?k=${encodeURIComponent(searchTerm)}`,
+                            '淘寶/天貓': `https://s.taobao.com/search?q=${encodeURIComponent(searchTerm)}`,
+                            'Yahoo購物': `https://tw.buy.yahoo.com/search/product?p=${encodeURIComponent(searchTerm)}`,
+                            '博客來': `https://search.books.com.tw/search/query/key/${encodeURIComponent(searchTerm)}`
+                        };
+                        return urls[platform] || '#';
+                    }
+                    
+                    // 取得平台圖示
+                    function getPlatformIcon(platform) {
+                        const icons = {
+                            '蝦皮購物': '🛍️',
+                            'PChome 24h': '🚚',
+                            'momo購物網': '🛒',
+                            'Amazon JP': '📦',
+                            '淘寶/天貓': '🏪',
+                            'Yahoo購物': '🎯',
+                            '博客來': '📚'
+                        };
+                        return icons[platform] || '🛒';
+                    }
                     
                     // 顯示結果
                     showResult(data);
@@ -1465,8 +1718,8 @@
             // 顯示結果面板
             resultPanel.classList.add('active');
             // 保存數據供分享使用
-    saveAnalysisData(data);
-    saveScanHistory(data);
+            saveAnalysisData(data);
+            saveScanHistory(data);
         }
 
         // 分享功能
@@ -1664,16 +1917,30 @@
         });
         
         galleryBtn.addEventListener('click', () => {
-            alert('相簿功能開發中...\n未來將可查看歷史掃描記錄！');
-        });
-        
-        flashBtn.addEventListener('click', () => {
-            alert('閃光燈功能開發中...\n適用於低光環境拍攝！');
+            // 創建檔案輸入元素
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        capturedImage = e.target.result;
+                        analyzeImage();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+            input.click();
         });
         
         // 初始化應用
         window.addEventListener('load', () => {
             initCamera();
+            
+            // 設置初始縮放位置
+            zoomThumb.style.top = '75px';
         });
         
         // 清理資源
